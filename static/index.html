@@ -6,7 +6,7 @@
     <meta content='width=device-width; height=device-height; initial-scale=1.0; maximum-scale=1.0; user-scalable=0;' name='viewport' />
     <meta name="viewport" content="width=device-width" />
     <meta name="license" content="
-        Copyright 2013 Google, Abram Hindle
+        Copyright 2013 Google, Abram Hindle, Justin Widney
         
         Licensed under the Apache License, Version 2.0 (the "License");
         you may not use this file except in compliance with the License.
@@ -27,7 +27,6 @@
     <canvas id="c" width="100%" height="100%" style="-webkit-tap-highlight-color: transparent;"></canvas> 
 
     <script>
-      // Fix me
 var canvas = document.getElementById('c');
 var host = window.location.host;
 var context = canvas.getContext("2d");
@@ -47,6 +46,19 @@ world = {};
 //XXX: TODO Make this prettier!
 function drawCircle(context,entity) {
     with(context) {
+       
+
+        beginPath()
+        lineWidth = 5;
+        var x = entity["x"];
+        var y = entity["y"];
+        //moveTo(x,y);
+        fillStyle = "#F96167";
+        strokeStyle = fillStyle;
+        arc(x, y, (entity["radius"])?entity["radius"]:80, 0, 4.0 * Math.PI, false);  
+        fill();
+        stroke();  
+
         beginPath();                
         lineWidth = 3;
         var x = entity["x"];
@@ -55,7 +67,9 @@ function drawCircle(context,entity) {
         fillStyle = entity["colour"];
         strokeStyle = fillStyle;
         arc(x, y, (entity["radius"])?entity["radius"]:50, 0, 2.0 * Math.PI, false);  
-        stroke();                                
+        fill();
+        stroke();  
+
     }
 }
 
@@ -77,6 +91,11 @@ function clearFrame() {
     }
 
 }
+
+
+
+
+
 
 // This actually draws the frame
 function renderFrame() {
@@ -125,6 +144,14 @@ function addEntity(entity, data) {
     world[entity] = data;
     drawNextFrame(); // (but should we?)
     //XXX: Send a XHTML Request that updates the entity you just modified!
+
+    var url = "/entity/" + entity;
+
+    var data_packet = {};
+    data_packet[entity] = data;
+    socket.send(JSON.stringify(data_packet));
+
+
 }
 var counter = 0;
 function addEntityWithoutName(data) {
@@ -231,16 +258,14 @@ mouse = (function() {
 // Add the application specific mouse listeners!
 //XXX: TODO Make these prettier!
 mouse.mousedowners.push(function(x,y,clicked,e) {
-    addEntityWithoutName({'x':x,'y':y,'colour':'blue'});
+    addEntityWithoutName({'x':x,'y':y,'colour':'#FCE77D', 'radius':10});
 });
-
 mouse.mouseuppers.push(function(x,y,clicked,e) {
-    addEntityWithoutName({'x':x,'y':y,'colour':'red'});
+    addEntityWithoutName({'x':x,'y':y,'colour':'#FCE77D', 'radius':10});
 });
-
 mouse.mousedraggers.push(function(x,y,clicked,e) {
-    addEntityWithoutName({'x':x,'y':y,'colour':'green',
-                          'radius':10});
+    addEntityWithoutName({'x':x,'y':y,'colour':'#FCE77D', 'radius':10
+                          });
 });
 
 
@@ -252,16 +277,40 @@ function update() {
 function wsSetup() {
     var url = "ws://"+host+"/subscribe";   
     socket = new WebSocket(url);
+    
+    console.log(socket)
+
+    // open the socket and get the current world. 
     socket.onopen = function() {
-        //XXX: TODO What are you going to do here?
+
+        fetch('/world').then((response) => {
+            return response.json()
+        }).then((myJson) => {
+            world = myJson;
+        });
+
+
     };
+
+
+
+
     socket.onerror = function(msg) {
         debug("WebSocket Error:" + msg.data);
     };
     socket.onmessage = function(msg) {  
         try {
             debug("WebSocket Recv:" + msg.data);
-            //XXX: TODO What are you going to do here?            
+            
+            // https://github.com/abramhindle/WebSocketsExamples/blob/master/static/chat.html
+            var message = JSON.parse(msg.data);
+
+            for (var data in message){
+                world[data] = message[data];
+                drawNextFrame();
+
+            }
+
         } catch (e) {
             alert("socket on message: " + e);
         }

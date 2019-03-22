@@ -59,3 +59,10 @@ Contributors
 * Mark Galloway
 * Abram Hindle
 * Cole Mackenzie
+
+
+External Code 
+=============
+https://github.com/abramhindle/WebSocketsExamples
+https://github.com/justinwidney/CMPUT404-assignment-ajax
+https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API/Using_Fetch
